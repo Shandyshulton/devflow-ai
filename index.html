@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DevFlow AI — Intelligent Developer Workspace for AI-Assisted Project Management" />
+  <meta name="theme-color" content="#14172a" id="meta-theme-color" />
+  <title>DevFlow AI — Intelligent Developer Workspace</title>
+  <!--
+    Theme is applied as data-theme on <html> before the stylesheet is parsed,
+    so the correct token set is active from first paint.
+  -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('devflow-theme');
+        if (saved === 'light' || saved === 'dark') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (e) { /* localStorage unavailable — use default */ }
+    })();
+  </script>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       APP SHELL
+  ============================================================ -->
+  <div class="app-shell">
+
+    <!-- Sidebar navigation (FR-07) -->
+    <nav class="sidebar" aria-label="Main navigation">
+      <div class="sidebar__brand">
+        <span class="sidebar__brand-icon" aria-hidden="true">⬡</span>
+        <span class="sidebar__brand-name">DevFlow <strong>AI</strong></span>
+      </div>
+
+      <ul class="sidebar__nav" role="list">
+        <li>
+          <button class="nav-item nav-item--active" data-section="dashboard"
+            aria-current="page" type="button">
+            <span class="nav-item__icon" aria-hidden="true">◈</span>
+            <span class="nav-item__label">Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-section="tasks" type="button">
+            <span class="nav-item__icon" aria-hidden="true">✦</span>
+            <span class="nav-item__label">Tasks</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-section="bugs" type="button">
+            <span class="nav-item__icon" aria-hidden="true">◎</span>
+            <span class="nav-item__label">Bug Tracking</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-section="assistant" type="button">
+            <span class="nav-item__icon" aria-hidden="true">◆</span>
+            <span class="nav-item__label">AI Assistant</span>
+          </button>
+        </li>
+      </ul>
+
+      <!-- Theme toggle -->
+      <div class="sidebar__theme">
+        <button class="theme-toggle" id="themeToggle" type="button"
+          aria-label="Switch to light mode" aria-pressed="false">
+          <span class="theme-toggle__icon theme-toggle__icon--dark" aria-hidden="true">☾</span>
+          <span class="theme-toggle__icon theme-toggle__icon--light" aria-hidden="true">☀</span>
+          <span class="theme-toggle__label theme-toggle__label--dark">Dark</span>
+          <span class="theme-toggle__label theme-toggle__label--light">Light</span>
+        </button>
+      </div>
+
+      <p class="sidebar__note">DevFlow AI · Prototype v1.0</p>
+    </nav>
+
+    <!-- Mobile header bar -->
+    <header class="topbar" role="banner">
+      <button class="topbar__menu-btn" id="sidebarToggle"
+        aria-label="Toggle navigation" aria-expanded="false" type="button">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <span class="topbar__title" id="topbarTitle">Dashboard</span>
+      <!-- Theme toggle (visible on mobile topbar) -->
+      <button class="theme-toggle theme-toggle--compact" id="themeToggleMobile" type="button"
+        aria-label="Switch to light mode" aria-pressed="false">
+        <span class="theme-toggle__icon theme-toggle__icon--dark" aria-hidden="true">☾</span>
+        <span class="theme-toggle__icon theme-toggle__icon--light" aria-hidden="true">☀</span>
+      </button>
+    </header>
+
+    <!-- Main content area -->
+    <main class="main-content" id="mainContent">
+
+      <!-- ══════════════════════════════════════════════════════════
+           SECTION: Dashboard  (FR-01, FR-06)
+      ══════════════════════════════════════════════════════════ -->
+      <section class="section" id="section-dashboard" aria-labelledby="heading-dashboard">
+        <h1 class="section__heading" id="heading-dashboard">Dashboard</h1>
+        <p class="section__subheading">Project overview and progress summary.</p>
+
+        <!-- Stat cards (FR-01) -->
+        <div class="stat-grid" role="group" aria-label="Project statistics">
+          <div class="stat-card">
+            <span class="stat-card__label">Total Tasks</span>
+            <span class="stat-card__value" id="stat-total" aria-label="Total tasks: 0">0</span>
+          </div>
+          <div class="stat-card stat-card--done">
+            <span class="stat-card__label">Completed</span>
+            <span class="stat-card__value" id="stat-done" aria-label="Completed tasks: 0">0</span>
+          </div>
+          <div class="stat-card stat-card--progress">
+            <span class="stat-card__label">In Progress</span>
+            <span class="stat-card__value" id="stat-inprogress" aria-label="Tasks in progress: 0">0</span>
+          </div>
+          <div class="stat-card stat-card--bugs">
+            <span class="stat-card__label">Open Bugs</span>
+            <span class="stat-card__value" id="stat-bugs" aria-label="Open bugs: 0">0</span>
+          </div>
+        </div>
+
+        <!-- Project progress (FR-06) -->
+        <div class="progress-block">
+          <div class="progress-block__header">
+            <span class="progress-block__title">Project Progress</span>
+            <span class="progress-block__pct" id="progress-pct" aria-live="polite">0%</span>
+          </div>
+          <div class="progress-bar" role="progressbar"
+            aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
+            aria-label="Project progress">
+            <div class="progress-bar__fill" id="progress-fill"></div>
+          </div>
+          <p class="progress-block__note" id="progress-note">No tasks yet.</p>
+        </div>
+
+        <!-- Recent tasks snapshot (FR-01) -->
+        <div class="dashboard-tasks">
+          <h2 class="subsection-heading">Recent Tasks</h2>
+          <ul class="task-list" id="dashboard-task-list" aria-label="Recent tasks">
+            <!-- populated by JS -->
+          </ul>
+          <p class="empty-state" id="dashboard-empty" hidden>No tasks have been added yet.</p>
+          <button class="btn btn--ghost btn--sm" data-section="tasks" id="viewAllTasks" type="button">
+            View all tasks →
+          </button>
+        </div>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════
+           SECTION: Tasks  (FR-02)
+      ══════════════════════════════════════════════════════════ -->
+      <section class="section section--hidden" id="section-tasks" aria-labelledby="heading-tasks">
+        <div class="section-header-row">
+          <div>
+            <h1 class="section__heading" id="heading-tasks">Tasks</h1>
+            <p class="section__subheading">Manage and track your development tasks.</p>
+          </div>
+          <button class="btn btn--primary" id="openAddTask" type="button"
+            aria-haspopup="dialog">+ Add Task</button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-bar" role="group" aria-label="Filter tasks">
+          <label class="filter-bar__label" for="filterStatus">Status</label>
+          <select class="filter-select" id="filterStatus" aria-label="Filter by status">
+            <option value="all">All Statuses</option>
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="done">Done</option>
+          </select>
+
+          <label class="filter-bar__label" for="filterPriority">Priority</label>
+          <select class="filter-select" id="filterPriority" aria-label="Filter by priority">
+            <option value="all">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+
+          <button class="btn btn--ghost btn--sm" id="clearFilters" type="button">Clear</button>
+        </div>
+
+        <!-- Task list -->
+        <ul class="task-list task-list--full" id="task-list" aria-label="Task list">
+          <!-- populated by JS -->
+        </ul>
+        <p class="empty-state" id="tasks-empty" hidden>No tasks match the current filter.</p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════
+           SECTION: Bug Tracking  (FR-04)
+      ══════════════════════════════════════════════════════════ -->
+      <section class="section section--hidden" id="section-bugs" aria-labelledby="heading-bugs">
+        <div class="section-header-row">
+          <div>
+            <h1 class="section__heading" id="heading-bugs">Bug Tracking</h1>
+            <p class="section__subheading">
+              QA bug reports and tracking.
+              <span class="badge badge--info">Sample records are demonstration data only</span>
+            </p>
+          </div>
+          <button class="btn btn--primary" id="openReportBug" type="button"
+            aria-haspopup="dialog">+ Report Bug</button>
+        </div>
+
+        <!-- Bug search and filters -->
+        <div class="filter-bar" role="group" aria-label="Search and filter bugs">
+          <label class="filter-bar__label" for="bugSearch">Search</label>
+          <input class="filter-input" id="bugSearch" type="search"
+            placeholder="Title or ID…" aria-label="Search bugs by title or ID"
+            autocomplete="off" maxlength="120" />
+
+          <label class="filter-bar__label" for="bugFilterStatus">Status</label>
+          <select class="filter-select" id="bugFilterStatus" aria-label="Filter bugs by status">
+            <option value="all">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+          </select>
+
+          <label class="filter-bar__label" for="bugFilterSeverity">Severity</label>
+          <select class="filter-select" id="bugFilterSeverity" aria-label="Filter bugs by severity">
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+
+          <label class="filter-bar__label" for="bugFilterPriority">Priority</label>
+          <select class="filter-select" id="bugFilterPriority" aria-label="Filter bugs by priority">
+            <option value="all">All Priorities</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+
+          <button class="btn btn--ghost btn--sm" id="clearBugFilters" type="button">Clear</button>
+        </div>
+
+        <!-- Bug list -->
+        <ul class="bug-list" id="bug-list" aria-label="Bug list">
+          <!-- populated by JS -->
+        </ul>
+        <p class="empty-state" id="bugs-empty" hidden>No bugs match the current filter.</p>
+      </section>
+
+      <!-- ══════════════════════════════════════════════════════════
+           SECTION: AI Assistant  (FR-03, FR-05)
+      ══════════════════════════════════════════════════════════ -->
+      <section class="section section--hidden" id="section-assistant"
+        aria-labelledby="heading-assistant">
+        <h1 class="section__heading" id="heading-assistant">AI Assistant</h1>
+        <p class="section__subheading">
+          Simulated AI assistance for task planning and requirement breakdown.
+          <span class="badge badge--warning">Simulated — not a real AI model</span>
+        </p>
+
+        <!-- Sub-tabs -->
+        <div class="tab-bar" role="tablist" aria-label="AI Assistant tabs">
+          <button class="tab tab--active" id="tab-chat" role="tab"
+            aria-selected="true" aria-controls="tabpanel-chat" type="button">
+            Chat
+          </button>
+          <button class="tab" id="tab-breakdown" role="tab"
+            aria-selected="false" aria-controls="tabpanel-breakdown" type="button">
+            Requirement Breakdown
+          </button>
+        </div>
+
+        <!-- Tab: Chat (FR-05) -->
+        <div class="tabpanel" id="tabpanel-chat" role="tabpanel"
+          aria-labelledby="tab-chat">
+          <div class="chat-window" id="chat-window" aria-live="polite" aria-label="Chat messages">
+            <!-- messages injected by JS -->
+          </div>
+          <form class="chat-form" id="chat-form" novalidate>
+            <label class="sr-only" for="chat-input">Your message</label>
+            <input class="chat-input" id="chat-input" type="text"
+              placeholder="Ask about task planning, priorities, workflow…"
+              autocomplete="off" maxlength="500" />
+            <button class="btn btn--primary" type="submit">Send</button>
+          </form>
+          <p class="input-error" id="chat-error" aria-live="assertive" hidden>
+            Please enter a message before sending.
+          </p>
+        </div>
+
+        <!-- Tab: Requirement Breakdown (FR-03) -->
+        <div class="tabpanel tabpanel--hidden" id="tabpanel-breakdown" role="tabpanel"
+          aria-labelledby="tab-breakdown">
+          <p class="helper-text">
+            Describe a project requirement and the assistant will suggest a structured list of
+            development tasks.
+          </p>
+          <form class="breakdown-form" id="breakdown-form" novalidate>
+            <label class="form-label" for="req-input">Project Requirement</label>
+            <textarea class="form-textarea" id="req-input" rows="4"
+              placeholder="e.g. Users must be able to register, log in, and reset their password."
+              maxlength="1000"></textarea>
+            <p class="input-error" id="req-error" aria-live="assertive" hidden>
+              Please enter a requirement before generating tasks.
+            </p>
+            <button class="btn btn--primary" type="submit">Generate Tasks</button>
+          </form>
+          <div class="breakdown-result" id="breakdown-result" hidden>
+            <h3 class="breakdown-result__heading">Suggested Tasks</h3>
+            <ul class="breakdown-list" id="breakdown-list" aria-label="Suggested tasks">
+              <!-- populated by JS -->
+            </ul>
+            <p class="sim-disclaimer">
+              ⚠ These suggestions are simulated and based on predefined patterns,
+              not a real AI model.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div><!-- /.app-shell -->
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MODAL: Add Task  (FR-02)
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-addTask" role="dialog"
+    aria-modal="true" aria-labelledby="modal-addTask-heading" hidden>
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-addTask-heading">Add New Task</h2>
+        <button class="modal__close" id="closeAddTask" aria-label="Close dialog" type="button">✕</button>
+      </div>
+      <form class="modal__body" id="addTaskForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="taskTitle">Title <span aria-hidden="true">*</span></label>
+          <input class="form-input" id="taskTitle" type="text"
+            placeholder="Short task title" maxlength="120" autocomplete="off" />
+          <p class="input-error" id="taskTitleError" aria-live="assertive" hidden>
+            Task title is required.
+          </p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="taskDesc">Description</label>
+          <textarea class="form-textarea" id="taskDesc" rows="3"
+            placeholder="Optional description" maxlength="500"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="taskStatus">Status</label>
+            <select class="form-select" id="taskStatus">
+              <option value="todo">To Do</option>
+              <option value="inprogress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="taskPriority">Priority</label>
+            <select class="form-select" id="taskPriority">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button class="btn btn--ghost" id="cancelAddTask" type="button">Cancel</button>
+          <button class="btn btn--primary" type="submit">Add Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MODAL: Report Bug
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-reportBug" role="dialog"
+    aria-modal="true" aria-labelledby="modal-reportBug-heading" hidden>
+    <div class="modal modal--wide">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-reportBug-heading">Report a Bug</h2>
+        <button class="modal__close" id="closeReportBug" aria-label="Close dialog" type="button">✕</button>
+      </div>
+      <form class="modal__body" id="reportBugForm" novalidate>
+        <!-- Row 1: title -->
+        <div class="form-group">
+          <label class="form-label" for="bugTitle">Title <span aria-hidden="true">*</span></label>
+          <input class="form-input" id="bugTitle" type="text"
+            placeholder="Short, descriptive bug title" maxlength="160" autocomplete="off" />
+          <p class="input-error" id="bugTitleError" aria-live="assertive" hidden>
+            Bug title is required.
+          </p>
+        </div>
+
+        <!-- Row 2: description -->
+        <div class="form-group">
+          <label class="form-label" for="bugDesc">Description <span aria-hidden="true">*</span></label>
+          <textarea class="form-textarea" id="bugDesc" rows="3"
+            placeholder="What is happening? Be specific." maxlength="1000"></textarea>
+          <p class="input-error" id="bugDescError" aria-live="assertive" hidden>
+            Description is required.
+          </p>
+        </div>
+
+        <!-- Row 3: related feature -->
+        <div class="form-group">
+          <label class="form-label" for="bugFeature">Related Feature / Page <span aria-hidden="true">*</span></label>
+          <input class="form-input" id="bugFeature" type="text"
+            placeholder="e.g. Task Management, Dashboard, AI Assistant" maxlength="120" autocomplete="off" />
+          <p class="input-error" id="bugFeatureError" aria-live="assertive" hidden>
+            Related feature is required.
+          </p>
+        </div>
+
+        <!-- Row 4: steps -->
+        <div class="form-group">
+          <label class="form-label" for="bugSteps">Steps to Reproduce</label>
+          <textarea class="form-textarea" id="bugSteps" rows="3"
+            placeholder="1. Go to…&#10;2. Click…&#10;3. Observe…" maxlength="1000"></textarea>
+        </div>
+
+        <!-- Row 5: expected / actual -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="bugExpected">Expected Result</label>
+            <textarea class="form-textarea" id="bugExpected" rows="2"
+              placeholder="What should happen?" maxlength="500"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bugActual">Actual Result</label>
+            <textarea class="form-textarea" id="bugActual" rows="2"
+              placeholder="What actually happens?" maxlength="500"></textarea>
+          </div>
+        </div>
+
+        <!-- Row 6: severity, priority, status -->
+        <div class="form-row form-row--three">
+          <div class="form-group">
+            <label class="form-label" for="bugSeverity">Severity <span aria-hidden="true">*</span></label>
+            <select class="form-select" id="bugSeverity">
+              <option value="">Select severity…</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <p class="input-error" id="bugSeverityError" aria-live="assertive" hidden>
+              Severity is required.
+            </p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bugPriority">Priority</label>
+            <select class="form-select" id="bugPriority">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="bugStatus">Status</label>
+            <select class="form-select" id="bugStatus">
+              <option value="open">Open</option>
+              <option value="in-progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal__footer">
+          <button class="btn btn--ghost" id="cancelReportBug" type="button">Cancel</button>
+          <button class="btn btn--primary" type="submit">Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════
+       MODAL: Bug Detail (read-only inspection view)
+  ══════════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-bugDetail" role="dialog"
+    aria-modal="true" aria-labelledby="modal-bugDetail-heading" hidden>
+    <div class="modal modal--wide">
+      <div class="modal__header">
+        <h2 class="modal__title" id="modal-bugDetail-heading">Bug Detail</h2>
+        <button class="modal__close" id="closeBugDetail" aria-label="Close dialog" type="button">✕</button>
+      </div>
+      <div class="modal__body" id="bugDetailBody">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
